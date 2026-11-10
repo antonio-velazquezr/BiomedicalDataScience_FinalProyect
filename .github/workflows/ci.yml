@@ -1,0 +1,49 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  pruebas:
+    name: Pruebas (Python ${{ matrix.python }})
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python: ["3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+          cache: pip
+          cache-dependency-path: |
+            pyproject.toml
+            constraints.txt
+
+      - name: Instalar dependencias
+        run: pip install -c constraints.txt -e ".[test]"
+
+      - name: Correr pruebas (datos sintéticos, no requieren MIMIC)
+        run: pytest -v
+
+      - name: Verificar que no se versionaron datos
+        run: |
+          if git ls-files | grep -E '\.(csv\.gz|parquet|duckdb|zip)$|^data/'; then
+            echo "::error::Hay archivos de datos en el repositorio"
+            exit 1
+          fi
+
+  docker:
+    name: Imagen Docker
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Construir la imagen
+        run: docker build -t antitromboticos .
+
+      - name: Correr las pruebas dentro de la imagen
+        run: docker run --rm antitromboticos pytest -q

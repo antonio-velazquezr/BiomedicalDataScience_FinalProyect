@@ -1,0 +1,11 @@
+# Uso:
+#   docker compose run --rm analisis            # cohorte + análisis completo (requiere los datos en ./data/raw)
+#   docker compose run --rm analisis pytest     # pruebas con datos sintéticos
+services:
+  analisis:
+    build: .
+    image: antitromboticos
+    volumes:
+      - ./data:/app/data            # MIMIC-IV Demo (solo lectura en la práctica; aquí se escribe data/processed)
+      - ./resultados:/app/resultados
+      - ./figuras:/app/figuras

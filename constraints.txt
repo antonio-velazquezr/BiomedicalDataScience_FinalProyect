@@ -1,0 +1,6 @@
+# Versiones exactas con las que se desarrolló y probó el proyecto.
+# Uso: pip install -c constraints.txt -e ".[test]"
+duckdb==2.0.0
+polars==2.1.0
+matplotlib==3.11.2
+pytest==9.2.0

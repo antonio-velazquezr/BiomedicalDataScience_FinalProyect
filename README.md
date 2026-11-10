@@ -1,11 +1,13 @@
 # Anticoagulante + antiagregante en el hospital
 
+[![CI](https://github.com/antonio-velazquezr/BiomedicalDataScience_FinalProyect/actions/workflows/ci.yml/badge.svg)](https://github.com/antonio-velazquezr/BiomedicalDataScience_FinalProyect/actions/workflows/ci.yml)
+
 Estudio de farmacovigilancia (Modalidad A del proyecto final del curso de ciencia de datos en salud)
 sobre el **efecto conjunto de anticoagulantes y antiagregantes** en pacientes hospitalizados.
 
 > **Estado:** en desarrollo. La cohorte, los desenlaces y el análisis descriptivo ya están implementados
 > y probados (74 pacientes: 33 con la combinación y 41 con solo anticoagulante). Faltan los análisis de
-> sensibilidad, Docker, CI y la conversión a OMOP.
+> sensibilidad y la conversión a OMOP.
 
 ## Resultados principales
 
@@ -108,12 +110,40 @@ Este repositorio **no contiene datos**. Para reproducir el trabajo:
 
 ## Entorno
 
+### Opción A: Docker (recomendada)
+
+Requiere Docker con Compose. Los datos no se copian a la imagen: se montan desde `./data`.
+
 ```bash
-python -m venv .venv
-.venv/Scripts/python -m pip install -e ".[dev]"
+docker compose build
 ```
 
-Docker queda pendiente.
+```bash
+docker compose run --rm analisis
+```
+
+```bash
+docker compose run --rm analisis pytest
+```
+
+El primer comando construye la imagen, el segundo corre la cohorte y el análisis completo (requiere los
+datos en `data/raw/`) y el tercero corre las pruebas.
+
+### Opción B: entorno virtual local
+
+```bash
+python -m venv .venv
+.venv/Scripts/python -m pip install -c constraints.txt -e ".[dev]"
+```
+
+`constraints.txt` fija las versiones exactas con las que se desarrolló y probó el proyecto
+(Python 3.12/3.13, DuckDB 2.0, polars 2.1).
+
+### Integración continua
+
+En cada push, [GitHub Actions](.github/workflows/ci.yml) corre las pruebas en Python 3.12 y 3.13,
+verifica que no se haya versionado ningún archivo de datos, construye la imagen Docker y repite las
+pruebas dentro de ella. Las pruebas usan datos sintéticos, así que no requieren MIMIC.
 
 ## Cómo correrlo
 
@@ -140,8 +170,11 @@ python -m pytest
 ## Estructura
 
 ```
+.github/workflows/    integración continua
+Dockerfile, compose.yml
 sql/                  conjuntos de fármacos y cohorte (DuckDB)
 src/antitromboticos/  código del pipeline
+tests/                pruebas con datos sintéticos
 docs/                 propuesta, definición de cohorte
 resultados/           tablas agregadas (sin datos individuales)
 notebooks/            exploración (no es lógica de producción)

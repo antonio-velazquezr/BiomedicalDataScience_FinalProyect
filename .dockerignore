@@ -1,0 +1,13 @@
+.git
+.github
+.venv
+data
+*.zip
+notebooks
+figuras
+resultados
+docs
+**/__pycache__
+**/*.egg-info
+.ipynb_checkpoints
+proyecto-final.md
