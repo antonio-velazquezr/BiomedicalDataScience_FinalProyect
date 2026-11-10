@@ -1,0 +1,14 @@
+# Datos: nunca al repositorio (ver README para cómo obtenerlos)
+data/
+*.zip
+*.csv.gz
+*.duckdb
+
+# Enunciado del curso (no es parte del proyecto)
+proyecto-final.md
+
+# Entorno
+.venv/
+__pycache__/
+.ipynb_checkpoints/
+.env
