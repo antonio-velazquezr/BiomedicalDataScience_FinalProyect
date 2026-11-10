@@ -3,9 +3,29 @@
 Estudio de farmacovigilancia (Modalidad A del proyecto final del curso de ciencia de datos en salud)
 sobre el **efecto conjunto de anticoagulantes y antiagregantes** en pacientes hospitalizados.
 
-> **Estado:** en desarrollo. La cohorte y los desenlaces ya están implementados en SQL y probados
-> (74 pacientes: 33 con la combinación y 41 con solo anticoagulante; ver [docs/cohorte.md](docs/cohorte.md)).
-> Faltan el análisis estadístico, Docker, CI y la conversión a OMOP.
+> **Estado:** en desarrollo. La cohorte, los desenlaces y el análisis descriptivo ya están implementados
+> y probados (74 pacientes: 33 con la combinación y 41 con solo anticoagulante). Faltan los análisis de
+> sensibilidad, Docker, CI y la conversión a OMOP.
+
+## Resultados principales
+
+Reporte completo en [resultados/resultados.md](resultados/resultados.md).
+
+![Forest plot](figuras/07_forest_rr.png)
+
+- **Sangrado relevante:** 48 % con la combinación vs. 54 % con solo anticoagulante.
+  RR crudo 0.90 (IC 95 % 0.57–1.42); RR ajustado por intensidad (Mantel-Haenszel) 0.91 (0.59–1.40).
+  Los datos son compatibles tanto con una reducción del 40 % como con un aumento del 40 %: **no permiten
+  concluir que haya o no haya diferencia**.
+- **Por intensidad:** con profilaxis, RR 1.08 (0.66–1.77). El estrato terapéutico (9 vs. 5 pacientes) es
+  demasiado pequeño para interpretarse.
+- **Plaquetas:** la combinación no se asoció con más caídas de plaquetas, lo que es coherente con la
+  farmacología (los antiagregantes inhiben la función plaquetaria, no la cuenta).
+- **Los grupos no son comparables al inicio.** La combinación tiene pacientes mayores (66 vs. 55 años),
+  con más cardiopatía isquémica (48 % vs. 15 %) y fibrilación auricular (39 % vs. 20 %). El comparador
+  está más en UCI en la fecha índice (66 % vs. 42 %), donde las flebotomías y la hemodilución bajan la
+  Hb por sí mismas. Varias diferencias estandarizadas superan 0.4, así que los riesgos crudos no deben
+  leerse como efecto causal.
 
 ## Pregunta
 
@@ -103,6 +123,13 @@ python -m antitromboticos.cohorte
 
 Construye la cohorte y los desenlaces en DuckDB a partir de los scripts de `sql/` y escribe la tabla de
 atrición en `resultados/atricion.csv`. La definición está en [docs/cohorte.md](docs/cohorte.md).
+
+```bash
+python -m antitromboticos.analisis
+```
+
+Reconstruye la cohorte y genera la Tabla 1, los desenlaces (`resultados/*.csv` y `resultados/resultados.md`)
+y el forest plot (`figuras/07_forest_rr.png`).
 
 Pruebas (usan datos sintéticos, no requieren MIMIC):
 
