@@ -52,10 +52,10 @@ Generado por `python -m antitromboticos.analisis --fuente omop`. Combinación = 
 | Ingreso a UCI posterior | profilactica | 26 % (13–46) | 20 % (10–34) | +7 (-15 a +28) | 1.34 (0.53–3.38) |
 | Ingreso a UCI posterior | terapeutica | 18 % (5–48) | 60 % (23–88) | -42 (-90 a +7) | 0.30 (0.07–1.28) |
 | Ingreso a UCI posterior | Mantel-Haenszel |  |  |  | 0.91 (0.43–1.90) |
-| Muerte hospitalaria | Todos | 3 % (1–15) | 4 % (1–15) | -2 (-10 a +7) | 0.66 (0.06–7.00) |
-| Muerte hospitalaria | profilactica | 4 % (1–21) | 5 % (1–17) | -1 (-11 a +10) | 0.87 (0.08–9.07) |
+| Muerte hospitalaria | Todos | 3 % (1–15) | 4 % (1–15) | -1 (-10 a +7) | 0.68 (0.06–7.16) |
+| Muerte hospitalaria | profilactica | 4 % (1–21) | 5 % (1–16) | -1 (-11 a +10) | 0.89 (0.09–9.30) |
 | Muerte hospitalaria | terapeutica | 0 % (0–26) | 0 % (0–43) | +0 (IC no estimable) | — |
-| Muerte hospitalaria | Mantel-Haenszel |  |  |  | 0.87 (0.08–9.07) |
+| Muerte hospitalaria | Mantel-Haenszel |  |  |  | 0.89 (0.09–9.30) |
 
 ## Tabla 3. Desenlaces continuos, mediana [RIC]
 

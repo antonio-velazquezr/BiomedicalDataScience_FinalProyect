@@ -73,6 +73,9 @@ Las plaquetas son una variable **secundaria**. Los antiagregantes inhiben la *fu
 el *número* de plaquetas, así que la combinación no debería bajar la cuenta. Una caída de la cuenta
 apunta más a la heparina, la cirugía o la sepsis.
 
+El tipo, las unidades, el origen (tabla, itemid o concepto) y el porcentaje de faltantes de cada
+variable están en el **[diccionario de datos](docs/diccionario_datos.md)**.
+
 ### Covariables (Tabla 1)
 
 Edad, sexo, estrato clínico (médico / quirúrgico / cirugía cardiaca), estancia en UCI al momento de la
@@ -180,6 +183,13 @@ python -m antitromboticos.analisis --fuente omop
 python -m antitromboticos.validacion_omop
 ```
 
+Diccionario de datos (`docs/diccionario_datos.md`; se regenera después de construir las cohortes para
+actualizar los faltantes):
+
+```bash
+python -m antitromboticos.diccionario
+```
+
 Pruebas (usan datos sintéticos, no requieren MIMIC):
 
 ```bash
@@ -195,7 +205,7 @@ sql/                  conjuntos de fármacos y cohorte sobre tablas nativas de M
 sql/omop/             conjuntos de conceptos y cohorte sobre OMOP CDM
 src/antitromboticos/  código del pipeline
 tests/                pruebas con datos sintéticos
-docs/                 propuesta, definición de cohorte, notas de OMOP
+docs/                 propuesta, definición de cohorte, diccionario de datos, notas de OMOP
 resultados/           tablas agregadas (sin datos individuales); resultados/omop/ para OMOP
 notebooks/            exploración (no es lógica de producción)
 figuras/              figuras generadas

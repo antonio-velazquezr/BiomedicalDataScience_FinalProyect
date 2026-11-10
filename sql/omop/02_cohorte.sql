@@ -30,7 +30,7 @@ SELECT
     CASE p.gender_concept_id WHEN 8532 THEN 'F' WHEN 8507 THEN 'M' END AS sexo,
     year(v.visit_start_datetime) - p.year_of_birth                 AS edad,
     date_diff('minute', v.visit_start_datetime, v.visit_end_datetime) / 1440.0 AS estancia_dias,
-    v.discharge_to_concept_id = 4216643                            -- "Patient died"
+    coalesce(v.discharge_to_concept_id = 4216643, false)           -- "Patient died" (nulo = no registrado)
         OR EXISTS (SELECT 1 FROM death d
                    WHERE d.person_id = v.person_id
                      AND d.death_datetime BETWEEN v.visit_start_datetime

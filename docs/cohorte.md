@@ -8,8 +8,10 @@ Implementada en:
 Se ejecuta con `python -m antitromboticos.cohorte`. La lógica está cubierta por
 [`tests/test_cohorte.py`](../tests/test_cohorte.py), que usa datos sintéticos.
 
-Salidas: `data/processed/cohorte_analitica.parquet` (nivel individual, no se versiona) y
-[`resultados/atricion.csv`](../resultados/atricion.csv).
+Salidas: `data/processed/mimic/cohorte_analitica.parquet` (nivel individual, no se versiona) y
+[`resultados/atricion.csv`](../resultados/atricion.csv). La versión sobre OMOP CDM está en
+[docs/omop.md](omop.md), y el detalle de cada variable (tipo, unidades, origen, faltantes) en el
+[diccionario de datos](diccionario_datos.md).
 
 ## Grupos
 

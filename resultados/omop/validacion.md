@@ -31,5 +31,5 @@ construida sobre OMOP CDM (`sql/omop/`) con la construida sobre las tablas nativ
 |---|---|---|
 | medico | quirurgico | 8 |
 | quirurgico | cirugia_cardiaca | 4 |
-| medico | cirugia_cardiaca | 3 |
 | quirurgico | medico | 3 |
+| medico | cirugia_cardiaca | 3 |
