@@ -1,67 +1,67 @@
 # Propuesta de proyecto final
 
-**Título:** Seguridad hematológica de la tromboprofilaxis con heparina: incidencia y temporalidad de
-trombocitopenia en pacientes hospitalizados, con estratificación por cirugía
+**Título:** Anticoagulante + antiagregante en el hospital: sangrado y desenlaces hospitalarios
+asociados a la terapia antitrombótica combinada
 
 **Modalidad:** A — Estudio de caracterización / farmacovigilancia
-**Fecha:** 2026-11-09
+**Fecha:** 2026-11-09 (revisada el mismo día; sustituye la versión centrada en trombocitopenia)
 
 ## Pregunta
 
-¿Con qué frecuencia y en qué momento aparece trombocitopenia durante la tromboprofilaxis con heparina
-en pacientes hospitalizados, y cómo cambia este patrón entre pacientes médicos, quirúrgicos y de cirugía
-cardiaca?
-
-**Secundaria (exploratoria):** ¿la incidencia difiere entre heparina no fraccionada (HNF) y enoxaparina?
+En pacientes hospitalizados que reciben un anticoagulante, ¿añadir un antiagregante se asocia con
+más sangrado clínicamente relevante y con peores desenlaces hospitalarios? Análisis estratificado por
+la intensidad de la anticoagulación (profiláctica vs. terapéutica).
 
 ## Justificación
 
-La tromboprofilaxis farmacológica se usa casi de rutina en pacientes hospitalizados. Su reacción adversa
-hematológica más relevante es la trombocitopenia inducida por heparina (HIT), que suele aparecer entre
-los días 5 y 10 de exposición y es más frecuente con HNF que con heparinas de bajo peso molecular.
-En pacientes quirúrgicos, la cirugía por sí misma baja las plaquetas en los primeros días. Distinguir
-esa caída esperada de una caída sospechosa de HIT es el problema central de farmacovigilancia que
-aborda este proyecto.
+Anticoagulantes y antiagregantes actúan sobre brazos distintos de la hemostasia: la cascada de
+coagulación y la función plaquetaria. En la práctica se combinan con frecuencia, por ejemplo en
+fibrilación auricular con cardiopatía isquémica, en síndrome coronario agudo, o en profilaxis
+tromboembólica en pacientes que ya toman aspirina. Bloquear ambos brazos aumenta el riesgo de sangrado.
+Los ensayos clínicos lo cuantifican en poblaciones seleccionadas; este proyecto describe qué ocurre en
+pacientes hospitalizados reales.
 
 ## Datos
 
 - **Fuente:** MIMIC-IV Clinical Database Demo v2.2 (PhysioNet), 100 pacientes, licencia ODbL.
   Descargado el 2026-11-09. Los datos no se incluyen en el repositorio.
-- **Modelo de datos:** conversión a OMOP CDM en DuckDB. Las definiciones de cohorte se escriben en SQL.
-- **Volumen preliminar:** 79 pacientes reciben heparina SC profiláctica y unos 10 enoxaparina profiláctica.
-  Hay 83 hospitalizaciones quirúrgicas con procedimiento mayor (20 de cirugía cardiaca). Las plaquetas
-  se miden casi a diario.
+- **Implementación:** SQL en DuckDB (`sql/`), ejecutado desde Python. Conversión a OMOP CDM pendiente.
+- **Volumen:** la cohorte implementada tiene 74 pacientes: 33 con la combinación y 41 con solo
+  anticoagulante (ver `docs/cohorte.md`).
 
 ## Diseño
 
 | Elemento | Definición |
 |---|---|
-| Población | Hospitalizaciones de ≥24 h que inician profilaxis (heparina SC o enoxaparina ≤40 mg) sin anticoagulación terapéutica previa; primera hospitalización elegible por paciente |
-| Fecha índice | Primera dosis de profilaxis |
-| Basal | Última cuenta de plaquetas en las 48 h previas a la fecha índice (requisito de inclusión) |
-| Seguimiento | Desde la fecha índice hasta el alta, el fin de la profilaxis o el día 14, lo que ocurra primero |
-| Desenlace principal | Caída de plaquetas ≥50 % respecto a la basal |
-| Temporalidad | Caída temprana (días 1–3) vs. caída compatible con HIT (días 5–10) |
-| Estratos | Médico / quirúrgico / cirugía cardiaca |
-| Comparación | Antes vs. durante la profilaxis (cada paciente es su propio control); HNF vs. enoxaparina (exploratoria) |
+| Población | Adultos con estancia ≥ 24 h que reciben un anticoagulante; primera hospitalización elegible por paciente |
+| Exclusiones | Diagnóstico principal de sangrado; sin plaquetas o Hb basales |
+| Expuestos | Anticoagulante + antiagregante con solapamiento temporal; fecha índice = inicio del solapamiento |
+| Comparadores | Anticoagulante sin antiagregante en la hospitalización; fecha índice = inicio del anticoagulante |
+| Estratos | Intensidad: profiláctica / terapéutica |
+| Seguimiento | Fecha índice → alta o día 14 |
 
-**Análisis de sensibilidad:** umbral de caída (≥30 % vs. ≥50 %; <100k vs. <150k), exposición por
-prescripción vs. por administración (`emar`), exclusión de los primeros 4 días posoperatorios.
+**Desenlace principal:** sangrado clínicamente relevante, definido como caída de Hb ≥ 2 g/dL respecto a
+la basal o transfusión de concentrado eritrocitario.
 
-**Entregables:** tabla de atrición, Tabla 1 por estrato, incidencia con IC 95 %, curvas de plaquetas
-por día desde la fecha índice, puntaje 4T parcial (componentes de magnitud y temporalidad).
+**Secundarios:** cada componente del desenlace principal; caída máxima de Hb; plaquetas (cambio
+porcentual, trombocitopenia nueva, caída ≥ 50 %); estancia desde la fecha índice; ingreso a UCI
+posterior; mortalidad hospitalaria.
+
+**Análisis:** riesgos con IC 95 %, diferencia y razón de riesgos, razón de riesgos combinada de
+Mantel-Haenszel entre estratos, Tabla 1 con indicaciones (fibrilación auricular, cardiopatía isquémica,
+tromboembolia venosa, insuficiencia cardiaca) y tabla de atrición.
+
+**Sensibilidad:** exposición por administración (`emar`); seguimiento de 7 días; excluir cirugía
+cardiaca; desenlace solo por laboratorio.
 
 ## Limitaciones previstas
 
-- No hay prueba de anticuerpos anti-PF4 en el demo. Se reportará "trombocitopenia compatible con HIT",
-  no HIT confirmada.
-- El tamaño de muestra es pequeño; la comparación HNF vs. enoxaparina es exploratoria.
-- No se ve la heparina intraoperatoria (bypass cardiaco) ni la medicación previa al ingreso.
-- Los procedimientos tienen fecha pero no hora.
-- Los datos provienen de un solo centro de tercer nivel.
+- Confusión por indicación: la combinación se da a pacientes más cardiópatas. Se describe, no se elimina.
+- Tamaño de muestra pequeño: resultados descriptivos y exploratorios.
+- La transfusión solo está registrada en UCI; no se ve la medicación previa al ingreso.
+- Un solo centro de tercer nivel.
 
 ## Entorno y reproducibilidad
 
-Python (polars, DuckDB), SQL sobre OMOP, Docker, pytest con datos sintéticos de prueba, CI en GitHub
-Actions. Si se obtiene la acreditación de PhysioNet a tiempo, el mismo pipeline se correrá sobre
-MIMIC-IV completo.
+Python (polars, DuckDB), SQL, Docker, pytest con datos sintéticos de prueba y CI en GitHub Actions.
+Si se obtiene la acreditación de PhysioNet a tiempo, el mismo pipeline se correrá sobre MIMIC-IV completo.

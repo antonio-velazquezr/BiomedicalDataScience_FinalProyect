@@ -1,0 +1,9 @@
+paso,criterio,hospitalizaciones,pacientes
+1,Hospitalizaciones en MIMIC-IV Demo,275,100
+2,Edad >= 18 años,275,100
+3,Estancia >= 24 h,245,100
+4,>= 1 anticoagulante en la hospitalización,193,88
+5,Clasificable (combinación con solapamiento o sin antiagregante),193,88
+6,Diagnóstico principal distinto de sangrado,184,82
+7,Plaquetas y Hb basales (48 h previas),163,74
+8,Primera hospitalización elegible por paciente,74,74
