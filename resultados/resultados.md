@@ -1,6 +1,8 @@
-# Resultados
+# Resultados (mimic)
 
-Generado por `python -m antitromboticos.analisis`. Combinación = anticoagulante + antiagregante; comparador = solo anticoagulante. |DME| = diferencia de medias estandarizada (> 0.10 sugiere desbalance). Riesgos con IC de Wilson; diferencia con IC de Wald; RR con IC logarítmico (corrección de Haldane si un grupo tiene 0 eventos); RR de Mantel-Haenszel combinado entre estratos de intensidad.
+Fuente: MIMIC-IV Demo v2.2, tablas nativas.
+
+Generado por `python -m antitromboticos.analisis --fuente mimic`. Combinación = anticoagulante + antiagregante; comparador = solo anticoagulante. |DME| = diferencia de medias estandarizada (> 0.10 sugiere desbalance). Riesgos con IC de Wilson; diferencia con IC de Wald; RR con IC logarítmico (corrección de Haldane si un grupo tiene 0 eventos); RR de Mantel-Haenszel combinado entre estratos de intensidad.
 
 ## Tabla 1. Características basales
 

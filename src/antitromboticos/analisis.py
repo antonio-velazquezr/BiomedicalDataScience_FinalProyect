@@ -10,13 +10,18 @@ Construye la cohorte (ver `cohorte.py`) y escribe en `resultados/` solo tablas a
 
 y la figura ``figuras/07_forest_rr.png``.
 
+Con ``--fuente omop`` usa la cohorte OMOP y escribe en ``resultados/omop/`` y
+``figuras/08_forest_rr_omop.png``.
+
 Uso::
 
     python -m antitromboticos.analisis
+    python -m antitromboticos.analisis --fuente omop
 """
 
 from __future__ import annotations
 
+import argparse
 import math
 from pathlib import Path
 
@@ -26,7 +31,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
 import polars as pl  # noqa: E402
 
-from antitromboticos.cohorte import RAIZ, SALIDA_PROCESADOS, SALIDA_RESULTADOS, construir, exportar  # noqa: E402
+from antitromboticos.cohorte import FUENTES, RAIZ, construir, exportar  # noqa: E402
 from antitromboticos.estadistica import (  # noqa: E402
     Estimacion,
     diferencia_riesgos,
@@ -148,6 +153,8 @@ def conteos(df: pl.DataFrame, col: str) -> tuple[int, int, int, int]:
 def desenlaces_binarios(df: pl.DataFrame) -> pl.DataFrame:
     filas = []
     for col, etiqueta in BINARIOS.items():
+        if df[col].null_count() == df.height:  # desenlace no disponible en esta fuente (p. ej. transfusión en OMOP)
+            continue
         bloques = [("Todos", df)] + [(e, df.filter(pl.col("intensidad") == e)) for e in ESTRATOS]
         for estrato, sub in bloques:
             a, n1, c, n0 = conteos(sub, col)
@@ -185,7 +192,8 @@ def desenlaces_continuos(df: pl.DataFrame) -> pl.DataFrame:
 def forest_plot(bin_: pl.DataFrame, destino: Path) -> None:
     """Razón de riesgos cruda y ajustada por intensidad (Mantel-Haenszel), escala logarítmica."""
     lim_inf, lim_sup = 0.05, 20.0
-    desenlaces = list(BINARIOS)
+    disponibles = set(bin_["desenlace"].to_list())
+    desenlaces = [c for c in BINARIOS if c in disponibles]
     fig, ax = plt.subplots(figsize=(8.5, 0.62 * len(desenlaces) + 1.4))
 
     for i, col in enumerate(desenlaces):
@@ -233,20 +241,25 @@ def forest_plot(bin_: pl.DataFrame, destino: Path) -> None:
 
 # ----------------------------------------------------------------------------- main
 def main() -> None:
-    con = construir()
-    exportar(con)
-    df = pl.read_parquet(SALIDA_PROCESADOS / "cohorte_analitica.parquet")
+    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    parser.add_argument("--fuente", choices=list(FUENTES), default="mimic")
+    args = parser.parse_args()
+
+    con = construir(args.fuente)
+    df = pl.read_parquet(exportar(con, args.fuente))
+    salida = FUENTES[args.fuente].resultados
+    figura = "07_forest_rr.png" if args.fuente == "mimic" else f"08_forest_rr_{args.fuente}.png"
 
     t1 = tabla1(df)
     bin_ = desenlaces_binarios(df)
     cont = desenlaces_continuos(df)
 
-    SALIDA_RESULTADOS.mkdir(parents=True, exist_ok=True)
+    salida.mkdir(parents=True, exist_ok=True)
     FIGURAS.mkdir(exist_ok=True)
-    t1.write_csv(SALIDA_RESULTADOS / "tabla1.csv")
-    bin_.drop("rr", "rr_li", "rr_ls").write_csv(SALIDA_RESULTADOS / "desenlaces_binarios.csv")
-    cont.write_csv(SALIDA_RESULTADOS / "desenlaces_continuos.csv")
-    forest_plot(bin_, FIGURAS / "07_forest_rr.png")
+    t1.write_csv(salida / "tabla1.csv")
+    bin_.drop("rr", "rr_li", "rr_ls").write_csv(salida / "desenlaces_binarios.csv")
+    cont.write_csv(salida / "desenlaces_continuos.csv")
+    forest_plot(bin_, FIGURAS / figura)
 
     tabla_bin = bin_.select(
         pl.col("etiqueta").alias("Desenlace"),
@@ -256,18 +269,27 @@ def main() -> None:
         pl.col("dif_riesgos_pp").alias("Diferencia, pp (IC 95 %)"),
         pl.col("razon_riesgos").alias("RR (IC 95 %)"),
     )
+    nota_fuente = (
+        "Fuente: MIMIC-IV Demo v2.2, tablas nativas."
+        if args.fuente == "mimic"
+        else "Fuente: MIMIC-IV demo en OMOP CDM 5.3.1 (v0.9). Sin transfusiones: el sangrado relevante "
+             "es solo la caída de Hb ≥ 2 g/dL. Sin exclusión por diagnóstico principal de sangrado. "
+             "Ver docs/omop.md."
+    )
     reporte = "\n\n".join([
-        "# Resultados",
-        "Generado por `python -m antitromboticos.analisis`. Combinación = anticoagulante + antiagregante; "
+        f"# Resultados ({args.fuente})",
+        nota_fuente,
+        f"Generado por `python -m antitromboticos.analisis --fuente {args.fuente}`. "
+        "Combinación = anticoagulante + antiagregante; "
         "comparador = solo anticoagulante. |DME| = diferencia de medias estandarizada (> 0.10 sugiere desbalance). "
         "Riesgos con IC de Wilson; diferencia con IC de Wald; RR con IC logarítmico (corrección de Haldane "
         "si un grupo tiene 0 eventos); RR de Mantel-Haenszel combinado entre estratos de intensidad.",
         "## Tabla 1. Características basales", a_markdown(t1),
         "## Tabla 2. Desenlaces binarios", a_markdown(tabla_bin),
         "## Tabla 3. Desenlaces continuos, mediana [RIC]", a_markdown(cont),
-        "## Figura", "![Forest plot](../figuras/07_forest_rr.png)",
+        "## Figura", f"![Forest plot]({'../' * (len(salida.relative_to(RAIZ).parts))}figuras/{figura})",
     ])
-    (SALIDA_RESULTADOS / "resultados.md").write_text(reporte + "\n", encoding="utf-8")
+    (salida / "resultados.md").write_text(reporte + "\n", encoding="utf-8")
 
     with pl.Config(tbl_rows=50, tbl_cols=10, fmt_str_lengths=40, tbl_width_chars=200):
         print(t1)

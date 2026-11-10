@@ -5,9 +5,10 @@
 Estudio de farmacovigilancia (Modalidad A del proyecto final del curso de ciencia de datos en salud)
 sobre el **efecto conjunto de anticoagulantes y antiagregantes** en pacientes hospitalizados.
 
-> **Estado:** en desarrollo. La cohorte, los desenlaces y el análisis descriptivo ya están implementados
-> y probados (74 pacientes: 33 con la combinación y 41 con solo anticoagulante). Faltan los análisis de
-> sensibilidad y la conversión a OMOP.
+> **Estado:** en desarrollo. La cohorte, los desenlaces y el análisis descriptivo están implementados y
+> probados sobre dos fuentes: las tablas nativas de MIMIC-IV (74 pacientes: 33 con la combinación y 41 con
+> solo anticoagulante) y **OMOP CDM** (80 pacientes), validadas entre sí ([docs/omop.md](docs/omop.md)).
+> Faltan los análisis de sensibilidad y los vocabularios estándar de Athena.
 
 ## Resultados principales
 
@@ -28,6 +29,8 @@ Reporte completo en [resultados/resultados.md](resultados/resultados.md).
   está más en UCI en la fecha índice (66 % vs. 42 %), donde las flebotomías y la hemodilución bajan la
   Hb por sí mismas. Varias diferencias estandarizadas superan 0.4, así que los riesgos crudos no deben
   leerse como efecto causal.
+- **Réplica en OMOP:** la cohorte construida sobre OMOP CDM da un RR de Mantel-Haenszel de 0.94
+  (0.59–1.47), coherente con la versión nativa ([resultados/omop/resultados.md](resultados/omop/resultados.md)).
 
 ## Pregunta
 
@@ -41,7 +44,7 @@ Detalle en [docs/propuesta.md](docs/propuesta.md).
 
 | Elemento | Definición |
 |---|---|
-| **Fuente** | MIMIC-IV Clinical Database Demo v2.2 (100 pacientes) |
+| **Fuente** | MIMIC-IV Clinical Database Demo v2.2 (100 pacientes), en tablas nativas y en OMOP CDM 5.3.1 |
 | **Población** | Adultos con estancia ≥ 24 h que reciben un anticoagulante (profiláctico o terapéutico) durante la hospitalización. Se toma la primera hospitalización elegible por paciente |
 | **Exclusiones** | Hospitalizaciones cuyo diagnóstico principal es un sangrado; pacientes sin plaquetas o Hb basales |
 | **Grupo expuesto** | Anticoagulante **+ antiagregante** (aspirina o inhibidor P2Y12) con solapamiento temporal. Fecha índice: inicio del primer solapamiento |
@@ -107,6 +110,12 @@ Este repositorio **no contiene datos**. Para reproducir el trabajo:
    (<https://physionet.org/content/mimic-iv-demo/2.2/>). El acceso es abierto y la licencia es ODbL.
 2. Descomprime el archivo en `data/raw/`, de modo que quede `data/raw/mimic-iv-clinical-database-demo-2.2/`.
 3. Verifica la integridad con `sha256sum -c SHA256SUMS.txt` dentro de esa carpeta.
+4. Para la versión OMOP, descarga *MIMIC-IV demo data in the OMOP Common Data Model* **v0.9**
+   (<https://physionet.org/content/mimic-iv-demo-omop/0.9/>, acceso abierto, ODbL) y descomprímelo en
+   `data/raw/omop/`, de modo que quede
+   `data/raw/omop/mimic-iv-demo-data-in-the-omop-common-data-model-0.9/`. Verifica los checksums igual que arriba.
+
+Ambos se descargaron el 2026-11-09.
 
 ## Entorno
 
@@ -161,6 +170,16 @@ python -m antitromboticos.analisis
 Reconstruye la cohorte y genera la Tabla 1, los desenlaces (`resultados/*.csv` y `resultados/resultados.md`)
 y el forest plot (`figuras/07_forest_rr.png`).
 
+Versión OMOP (SQL en `sql/omop/`, resultados en `resultados/omop/`) y su validación contra la nativa:
+
+```bash
+python -m antitromboticos.analisis --fuente omop
+```
+
+```bash
+python -m antitromboticos.validacion_omop
+```
+
 Pruebas (usan datos sintéticos, no requieren MIMIC):
 
 ```bash
@@ -172,11 +191,12 @@ python -m pytest
 ```
 .github/workflows/    integración continua
 Dockerfile, compose.yml
-sql/                  conjuntos de fármacos y cohorte (DuckDB)
+sql/                  conjuntos de fármacos y cohorte sobre tablas nativas de MIMIC (DuckDB)
+sql/omop/             conjuntos de conceptos y cohorte sobre OMOP CDM
 src/antitromboticos/  código del pipeline
 tests/                pruebas con datos sintéticos
-docs/                 propuesta, definición de cohorte
-resultados/           tablas agregadas (sin datos individuales)
+docs/                 propuesta, definición de cohorte, notas de OMOP
+resultados/           tablas agregadas (sin datos individuales); resultados/omop/ para OMOP
 notebooks/            exploración (no es lógica de producción)
 figuras/              figuras generadas
 ```

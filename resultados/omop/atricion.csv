@@ -1,0 +1,9 @@
+paso,criterio,hospitalizaciones,pacientes
+1,Hospitalizaciones en OMOP (visit_occurrence hospitalarias),270,100
+2,Edad >= 18 años,270,100
+3,Estancia >= 24 h,247,100
+4,>= 1 anticoagulante en la hospitalización,195,88
+5,Clasificable (combinación con solapamiento o sin antiagregante),195,88
+6,Diagnóstico principal distinto de sangrado (no implementable en OMOP),195,88
+7,Plaquetas y Hb basales (48 h previas),175,80
+8,Primera hospitalización elegible por paciente,80,80

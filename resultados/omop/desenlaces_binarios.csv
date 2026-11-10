@@ -1,0 +1,25 @@
+desenlace,etiqueta,estrato,a,n1,c,n0,riesgo_combinacion,riesgo_solo_ac,dif_riesgos_pp,razon_riesgos
+sangrado_relevante,Sangrado relevante (principal),Todos,15,34,22,46,44 % (29–61),48 % (34–62),-4 (-26 a +18),0.92 (0.57–1.50)
+sangrado_relevante,Sangrado relevante (principal),profilactica,12,23,18,41,52 % (33–71),44 % (30–59),+8 (-17 a +34),1.19 (0.70–2.00)
+sangrado_relevante,Sangrado relevante (principal),terapeutica,3,11,4,5,27 % (10–57),80 % (38–96),-53 (-97 a -9),0.34 (0.12–0.98)
+sangrado_relevante,Sangrado relevante (principal),Mantel-Haenszel,,,,,"","","",0.94 (0.59–1.47)
+caida_hb_2,Caída de Hb ≥ 2 g/dL,Todos,15,34,22,46,44 % (29–61),48 % (34–62),-4 (-26 a +18),0.92 (0.57–1.50)
+caida_hb_2,Caída de Hb ≥ 2 g/dL,profilactica,12,23,18,41,52 % (33–71),44 % (30–59),+8 (-17 a +34),1.19 (0.70–2.00)
+caida_hb_2,Caída de Hb ≥ 2 g/dL,terapeutica,3,11,4,5,27 % (10–57),80 % (38–96),-53 (-97 a -9),0.34 (0.12–0.98)
+caida_hb_2,Caída de Hb ≥ 2 g/dL,Mantel-Haenszel,,,,,"","","",0.94 (0.59–1.47)
+plaquetas_caida_50,Caída de plaquetas ≥ 50 %,Todos,2,34,6,46,6 % (2–19),13 % (6–26),-7 (-20 a +5),0.45 (0.10–2.10)
+plaquetas_caida_50,Caída de plaquetas ≥ 50 %,profilactica,2,23,6,41,9 % (2–27),15 % (7–28),-6 (-22 a +10),0.59 (0.13–2.71)
+plaquetas_caida_50,Caída de plaquetas ≥ 50 %,terapeutica,0,11,0,5,0 % (0–26),0 % (0–43),+0 (IC no estimable),—
+plaquetas_caida_50,Caída de plaquetas ≥ 50 %,Mantel-Haenszel,,,,,"","","",0.59 (0.13–2.71)
+trombocitopenia_nueva,Trombocitopenia nueva (< 100k),Todos,1,27,0,35,4 % (1–18),0 % (0–10),+4 (-3 a +11),3.86 (0.16–91.12)
+trombocitopenia_nueva,Trombocitopenia nueva (< 100k),profilactica,1,20,0,32,5 % (1–24),0 % (0–11),+5 (-5 a +15),4.71 (0.20–110.40)
+trombocitopenia_nueva,Trombocitopenia nueva (< 100k),terapeutica,0,7,0,3,0 % (0–35),0 % (0–56),+0 (IC no estimable),—
+trombocitopenia_nueva,Trombocitopenia nueva (< 100k),Mantel-Haenszel,,,,,"","","",—
+uci_posterior,Ingreso a UCI posterior,Todos,8,34,11,46,24 % (12–40),24 % (14–38),+0 (-19 a +18),0.98 (0.44–2.18)
+uci_posterior,Ingreso a UCI posterior,profilactica,6,23,8,41,26 % (13–46),20 % (10–34),+7 (-15 a +28),1.34 (0.53–3.38)
+uci_posterior,Ingreso a UCI posterior,terapeutica,2,11,3,5,18 % (5–48),60 % (23–88),-42 (-90 a +7),0.30 (0.07–1.28)
+uci_posterior,Ingreso a UCI posterior,Mantel-Haenszel,,,,,"","","",0.91 (0.43–1.90)
+muerte,Muerte hospitalaria,Todos,1,34,2,45,3 % (1–15),4 % (1–15),-2 (-10 a +7),0.66 (0.06–7.00)
+muerte,Muerte hospitalaria,profilactica,1,23,2,40,4 % (1–21),5 % (1–17),-1 (-11 a +10),0.87 (0.08–9.07)
+muerte,Muerte hospitalaria,terapeutica,0,11,0,5,0 % (0–26),0 % (0–43),+0 (IC no estimable),—
+muerte,Muerte hospitalaria,Mantel-Haenszel,,,,,"","","",0.87 (0.08–9.07)
