@@ -1,6 +1,6 @@
 """La historia del sangrado: ¿qué hay detrás de cada caída de hemoglobina?
 
-Escribe en ``figuras/historia/`` nueve figuras en PDF, en orden narrativo, y ``HISTORIA.md`` con el
+Escribe en ``figuras/historia/`` quince figuras en PDF, en orden narrativo, y ``HISTORIA.md`` con el
 hilo conductor. Los números se calculan con los datos; varios títulos son interpretaciones fijas,
 así que deben revisarse si cambian la cohorte o las definiciones.
 
@@ -19,9 +19,10 @@ import math
 import matplotlib.pyplot as plt
 import numpy as np
 import polars as pl
+from scipy import stats
 
 from antitromboticos.cohorte import FUENTES, RAIZ, SQL_DIR, construir
-from antitromboticos.estadistica import Estimacion, Z95, razon_riesgos, regresion_logistica, wilson
+from antitromboticos.estadistica import Estimacion, Z95, holm, newcombe_rd, razon_riesgos, regresion_logistica, wilson
 from antitromboticos.figuras import (
     COLOR, FONDO, GRUPOS, NOMBRE, PIES, REJILLA, TENUE, TINTA, TINTA2, guardar, leyenda_figura, lienzo, tabla,
 )
@@ -32,14 +33,23 @@ EXPLICACIONES = ["Hemorragia documentada", "Cirugía o intervención", "Líquido
 COLOR_EXPL = dict(zip(EXPLICACIONES, ["#6250d6", "#1baf7a", "#eda100", "#b8b7b1"]))
 
 
-def cargar() -> pl.DataFrame:
+def conexion():
     con = construir("mimic")
     datos = FUENTES["mimic"].datos.as_posix()
     for t in ("procedures_icd", "d_icd_procedures", "d_icd_diagnoses"):
         con.execute(f"CREATE OR REPLACE VIEW {t} AS SELECT * FROM read_csv('{datos}/hosp/{t}.csv.gz', "
                     "sample_size = -1, types = {'icd_code': 'VARCHAR'})")
-    con.execute((SQL_DIR / "historia" / "01_causas_sangrado.sql").read_text(encoding="utf-8"))
-    return tabla(con, "SELECT * FROM causas")
+    for script in sorted((SQL_DIR / "historia").glob("*.sql")):
+        con.execute(script.read_text(encoding="utf-8"))
+    return con
+
+
+def cargar() -> pl.DataFrame:
+    return tabla(conexion(), "SELECT * FROM causas")
+
+
+def fmt_p(p: float) -> str:
+    return "p < 0.001" if p < 0.001 else f"p = {p:.3f}"
 
 
 def pct(a: int, n: int) -> str:
@@ -69,12 +79,17 @@ def h01_explicaciones(df) -> dict:
                      "intervención en los 2 días previos > ≥ 2 L de líquidos IV en 48 h > sin causa identificada",
                      figsize=(9, 4.6))
     y = range(len(EXPLICACIONES))
-    ax.barh(y, [n[e] for e in EXPLICACIONES], color=[COLOR_EXPL[e] for e in EXPLICACIONES], height=0.62)
+    ics = {e: wilson(n[e], ev.height) for e in EXPLICACIONES}
+    ax.barh(y, [n[e] for e in EXPLICACIONES], color=[COLOR_EXPL[e] for e in EXPLICACIONES], height=0.62,
+            xerr=[[n[e] - ev.height * ics[e].li for e in EXPLICACIONES], [ev.height * ics[e].ls - n[e] for e in EXPLICACIONES]],
+            error_kw=dict(ecolor=TINTA2, lw=1.4, capsize=3))
     for i, e in enumerate(EXPLICACIONES):
-        ax.text(n[e] + 0.3, i, f"{n[e]} ({pct(n[e], ev.height)})", va="center", color=TINTA)
+        ax.text(ev.height * ics[e].ls + 0.4, i, f"{n[e]} ({pct(n[e], ev.height)}; IC 95 % {100 * ics[e].li:.0f}–{100 * ics[e].ls:.0f})",
+                va="center", color=TINTA, fontsize=9.5)
+    ax.set_title("Proporción de los eventos con IC 95 % de Wilson", fontsize=10, color=TINTA2)
     ax.set_yticks(list(y), EXPLICACIONES, color=TINTA)
     ax.invert_yaxis()
-    ax.set_xlim(0, max(n.values()) * 1.2)
+    ax.set_xlim(0, ev.height * 0.95)
     ax.set_xlabel(f"Pacientes con caída de Hb ≥ 2 g/dL o transfusión (n = {ev.height})")
     ax.xaxis.get_major_locator().set_params(integer=True)
     ax.tick_params(axis="y", length=0)
@@ -106,8 +121,17 @@ def h02_por_grupo(df) -> dict:
     ax.set_xlim(0, 100)
     ax.xaxis.set_major_formatter(lambda v, _: f"{v:.0f} %")
     ax.tick_params(axis="y", length=0)
+    tabla_rc = [[salida[(g, e)] for e in EXPLICACIONES] for g in GRUPOS]
+    a, c = tabla_rc[0][0], tabla_rc[1][0]
+    n1, n0 = sum(tabla_rc[0]), sum(tabla_rc[1])
+    p_hemo = float(stats.fisher_exact([[a, n1 - a], [c, n0 - c]]).pvalue)
+    p_global = float(stats.fisher_exact(tabla_rc).pvalue)
+    dr = newcombe_rd(a, n1, c, n0)
+    ax.set_title(f"Hemorragia documentada entre los eventos: {100 * dr.valor:+.0f} pp (IC 95 % {100 * dr.li:+.0f} a {100 * dr.ls:+.0f}), "
+                 f"Fisher {fmt_p(p_hemo)} · Composición global 2×4: Fisher {fmt_p(p_global)}", fontsize=9.5, color=TINTA2)
     fig.legend(loc="outside lower center", ncol=4, frameon=False, fontsize=9.5)
     guardar(fig, "H02_explicacion_por_grupo.pdf", SALIDA)
+    salida["p_hemo"], salida["p_global"], salida["dr"] = p_hemo, p_global, dr
     return salida
 
 
@@ -124,19 +148,24 @@ def h03_que_distingue(df) -> dict:
                      "Frecuencia de cada posible causa en pacientes con y sin evento, en una ventana equivalente (sin "
                      "evento: alrededor del nadir de Hb). IC 95 %", figsize=(9.5, 5))
     colores = {"ev": "#6250d6", "no": TENUE}
+    ps = [float(stats.fisher_exact([[a, n1 - a], [c, n0 - c]]).pvalue) for a, n1, c, n0 in resultado.values()]
+    ajustados = holm(ps)
     for i, (nombre, (a, n1, c, n0)) in enumerate(resultado.items()):
         punto_ic(ax, i - 0.14, a, n1, colores["ev"])
         punto_ic(ax, i + 0.14, c, n0, colores["no"])
+        rr = razon_riesgos(a, n1, c, n0)
+        ax.text(i, 86, f"RP {fmt(rr)}\nFisher {fmt_p(ps[i])} · Holm {ajustados[i]:.3f}", ha="center", va="top",
+                fontsize=9, color=TINTA2)
     ax.set_xticks(range(len(resultado)), [k.replace(" (", "\n(") for k in resultado], color=TINTA)
     ax.set_xlim(-0.5, len(resultado) - 0.3)
     ax.tick_params(axis="x", length=0)
     ax.set_ylabel("Pacientes")
-    eje_pct(ax, 70)
+    eje_pct(ax, 88)
     ax.plot([], [], "o", color=colores["ev"], ms=9, label="Con caída de Hb o transfusión")
     ax.plot([], [], "o", color=colores["no"], ms=9, label="Sin evento")
     fig.legend(loc="outside lower center", ncol=2, frameon=False, fontsize=10)
     guardar(fig, "H03_que_distingue.pdf", SALIDA)
-    return resultado
+    return {**resultado, "p": dict(zip(resultado, ps)), "holm": dict(zip(resultado, ajustados))}
 
 
 # ----------------------------------------------------------------------------- acto 2: de dónde viene
@@ -311,6 +340,43 @@ def escribir_historia(df, r) -> None:
     sitio = r["h04"]
     proc = r["h05"]
     h6, h7, h8 = r["h06"], r["h07"], r["h08"]
+    post, res = r["post"], r["post"]["res"]
+    pot = post["potencia"]
+    filas_post = "\n".join(
+        f"| {v['etq']} | {v['a']}/{v['n1']} vs. {v['c']}/{v['n0']} | {100 * v['rd'].valor:+.1f} pp "
+        f"({100 * v['rd'].li:+.1f} a {100 * v['rd'].ls:+.1f}) | {v['p']:.3f} | {v['p_holm']:.3f} |"
+        if "rd" in v else
+        f"| {v['etq']} | mediana {v['med1']:.2f} vs. {v['med0']:.2f} (n = {v['n1']}, {v['n0']}) | HL {v['hl'].valor:+.2f} "
+        f"({v['hl'].li:+.2f} a {v['hl'].ls:+.2f}) | {v['p']:.3f} | {v['p_holm']:.3f} |"
+        for v in res.values())
+    seccion_post = f"""### 5. Después de la caída, ¿sirve añadir el antiagregante?
+
+**Respuesta:** con estos datos **no se demuestra beneficio ni daño**, y la pregunta de eficacia no se puede responder por
+completo. Estos fármacos previenen trombosis; no se indican para recuperar la Hb, y aquí no hay eventos trombóticos fechados.
+
+Población: {post['n']} pacientes con caída de Hb ≥ 2 g/dL ({post['n1']} con la combinación y {post['n0']} con solo
+anticoagulante), seguidos desde la primera caída hasta el alta o 7 días.
+
+- **[H10](H10_manejo_tras_caida.pdf):** {post['manejo']['ap'][0]} de {post['manejo']['ap'][1]} siguieron con el antiagregante.
+  No hay grupo para comparar continuar vs. suspender.
+- **[H11](H11_trayectoria_post_caida.pdf):** cambio de Hb a 72 h ajustado por Hb en t0 e intensidad:
+  {post['ajuste']['e'].valor:+.2f} g/dL (IC 95 % {post['ajuste']['e'].li:+.2f} a {post['ajuste']['e'].ls:+.2f}),
+  {fmt_p(post['ajuste']['p'])}, n = {post['ajuste']['n']}.
+- **[H12](H12_recuperacion_hb.pdf):** tiempo hasta recuperar la Hb: log-rank χ² = {post['logrank']['chi2']:.2f},
+  {fmt_p(post['logrank']['p'])}.
+- **[H13](H13_desenlaces_post_caida.pdf) y [H14](H14_hb_72h_y_estancia.pdf):** ningún desenlace difiere tras corregir por
+  comparaciones múltiples.
+- **[H15](H15_potencia.pdf):** con un riesgo de referencia de {100 * pot['p0']:.0f} %, el estudio solo tiene 80 % de potencia para
+  RR ≥ {pot['rr80']:.1f}. Para un RR hipotético de {pot['rr_ref']:.0f}, la potencia es **{100 * pot['pot']:.0f} %** y se requieren
+  unos **{pot['n']} pacientes por grupo**. La ausencia de significancia aquí **no es evidencia de ausencia de efecto**.
+
+| Desenlace tras la caída | Combinación vs. solo anticoagulante | Efecto (IC 95 %) | p | p Holm |
+|---|---|---|---|---|
+{filas_post}
+
+Pruebas: Fisher exacta (binarios), Mann-Whitney con Hodges-Lehmann e IC de Moses (continuos), log-rank (tiempo), Newcombe
+(diferencia de riesgos) y Holm sobre 7 desenlaces.
+"""
     texto = f"""# La historia del sangrado
 
 > **Hilo fijado para la presentación (2026-11-20).** La pregunta confirmatoria sigue siendo la de la propuesta; este
@@ -368,12 +434,14 @@ Generado con `python -m antitromboticos.historia`. Cohorte: MIMIC-IV Demo v2.2, 
   {a}/{n1} vs. {c}/{n0}, **RR {fmt(e_doc)}**. La dirección es la esperada por la farmacología, pero el intervalo
   {'incluye' if cruza_uno(e_doc) else 'no incluye'} el 1.
 
+{seccion_post}
 ## Mensaje final
 
-1. La caída de Hb ≥ 2 g/dL **no equivale a sangrado**: es un desenlace sensible pero poco específico.
+1. La caída de Hb ≥ 2 g/dL **no equivale a sangrado**: detecta la mayoría de las hemorragias, pero con muchas falsas alarmas.
 2. Cuando hay hemorragia documentada, la fuente más frecuente es **{sitio['orden'][0].lower()}**.
 3. La combinación **podría** aumentar el sangrado verdadero, pero estos datos solo permiten plantearlo como hipótesis.
-4. Siguiente paso: repetir el análisis, ya definido, en MIMIC-IV completo.
+4. Después de la caída **no se observó beneficio ni daño claro** de añadir el antiagregante, con potencia insuficiente.
+5. Siguiente paso: repetir el análisis, ya definido, en MIMIC-IV completo (≈ {pot['n']} pacientes por grupo).
 
 ## Cautelas para decirlas en voz alta
 
@@ -387,6 +455,10 @@ Generado con `python -m antitromboticos.historia`. Cohorte: MIMIC-IV Demo v2.2, 
 - **Acoplamiento matemático en H06.** La caída se calcula como basal − nadir, así que parte de su correlación con la Hb
   basal es aritmética y regresión a la media. No demuestra por sí sola hemoconcentración.
 - **Muestra pequeña:** {doc} eventos con hemorragia documentada.
+- **Sesgo de selección tras la caída.** Comparar solo a quienes ya tuvieron una caída condiciona a un evento posterior a la
+  exposición (*index event bias*): los grupos pueden diferir por razones ajenas al fármaco.
+- **Censura informativa.** El alta suele ocurrir cuando el paciente mejora, y la recuperación de Hb puede deberse a una
+  transfusión.
 
 ## Pies de figura
 
@@ -395,15 +467,18 @@ Generado con `python -m antitromboticos.historia`. Cohorte: MIMIC-IV Demo v2.2, 
 
 
 def main() -> None:
-    df = cargar()
+    from antitromboticos.post_caida import generar
+
+    con = conexion()
+    df = tabla(con, "SELECT * FROM causas")
     r = {
         "h01": h01_explicaciones(df), "h02": h02_por_grupo(df), "h03": h03_que_distingue(df), "h04": h04_sitio(df),
         "h05": h05_procedimiento(df), "h06": h06_hb_basal(df), "h07": h07_vigilancia(df), "h08": h08_modelo(df),
-        "h09": h09_especificidad(df),
+        "h09": h09_especificidad(df), "post": generar(con, df),
     }
     plt.close("all")
     escribir_historia(df, r)
-    print(f"{len(r)} figuras y HISTORIA.md en {SALIDA.relative_to(RAIZ)}")
+    print(f"15 figuras y HISTORIA.md en {SALIDA.relative_to(RAIZ)}")
     print("OR:", {k: fmt(v) for k, v in r["h08"]["odds"].items()})
     print("RR:", {k: (fmt(v[0]), f"{v[1]}/{v[2]} vs {v[3]}/{v[4]}") for k, v in r["h09"].items()})
     print("H07:", r["h07"]["a"], r["h07"]["n1"], r["h07"]["c"], r["h07"]["n0"], fmt(r["h07"]["rr"]))

@@ -55,12 +55,47 @@ Generado con `python -m antitromboticos.historia`. Cohorte: MIMIC-IV Demo v2.2, 
   7/33 vs. 4/41, **RR 2.15 (0.72–6.37)**. La dirección es la esperada por la farmacología, pero el intervalo
   incluye el 1.
 
+### 5. Después de la caída, ¿sirve añadir el antiagregante?
+
+**Respuesta:** con estos datos **no se demuestra beneficio ni daño**, y la pregunta de eficacia no se puede responder por
+completo. Estos fármacos previenen trombosis; no se indican para recuperar la Hb, y aquí no hay eventos trombóticos fechados.
+
+Población: 36 pacientes con caída de Hb ≥ 2 g/dL (16 con la combinación y 20 con solo
+anticoagulante), seguidos desde la primera caída hasta el alta o 7 días.
+
+- **[H10](H10_manejo_tras_caida.pdf):** 16 de 16 siguieron con el antiagregante.
+  No hay grupo para comparar continuar vs. suspender.
+- **[H11](H11_trayectoria_post_caida.pdf):** cambio de Hb a 72 h ajustado por Hb en t0 e intensidad:
+  -0.25 g/dL (IC 95 % -1.65 a +1.16),
+  p = 0.718, n = 25.
+- **[H12](H12_recuperacion_hb.pdf):** tiempo hasta recuperar la Hb: log-rank χ² = 0.09,
+  p = 0.764.
+- **[H13](H13_desenlaces_post_caida.pdf) y [H14](H14_hb_72h_y_estancia.pdf):** ningún desenlace difiere tras corregir por
+  comparaciones múltiples.
+- **[H15](H15_potencia.pdf):** con un riesgo de referencia de 10 %, el estudio solo tiene 80 % de potencia para
+  RR ≥ 3.7. Para un RR hipotético de 2, la potencia es **22 %** y se requieren
+  unos **201 pacientes por grupo**. La ausencia de significancia aquí **no es evidencia de ausencia de efecto**.
+
+| Desenlace tras la caída | Combinación vs. solo anticoagulante | Efecto (IC 95 %) | p | p Holm |
+|---|---|---|---|---|
+| Recupera Hb (≥ basal − 1 g/dL) | 3/16 vs. 3/20 | +3.8 pp (-20.6 a +29.9) | 1.000 | 1.000 |
+| Nueva caída ≥ 1 g/dL | 6/16 vs. 4/20 | +17.5 pp (-11.3 a +44.2) | 0.285 | 1.000 |
+| Transfusión de glóbulos rojos | 2/16 vs. 1/20 | +7.5 pp (-13.2 a +31.4) | 0.574 | 1.000 |
+| Ingreso posterior a UCI | 0/16 vs. 1/20 | -5.0 pp (-23.6 a +14.8) | 1.000 | 1.000 |
+| Muerte hospitalaria | 1/16 vs. 2/20 | -3.8 pp (-24.5 a +19.5) | 1.000 | 1.000 |
+| Cambio de Hb a 72 h (g/dL) | mediana 0.10 vs. 0.25 (n = 11, 14) | HL -0.30 (-1.20 a +1.00) | 0.584 | 1.000 |
+| Días hasta el alta | mediana 5.25 vs. 5.60 (n = 16, 20) | HL -0.85 (-3.85 a +2.27) | 0.599 | 1.000 |
+
+Pruebas: Fisher exacta (binarios), Mann-Whitney con Hodges-Lehmann e IC de Moses (continuos), log-rank (tiempo), Newcombe
+(diferencia de riesgos) y Holm sobre 7 desenlaces.
+
 ## Mensaje final
 
-1. La caída de Hb ≥ 2 g/dL **no equivale a sangrado**: es un desenlace sensible pero poco específico.
+1. La caída de Hb ≥ 2 g/dL **no equivale a sangrado**: detecta la mayoría de las hemorragias, pero con muchas falsas alarmas.
 2. Cuando hay hemorragia documentada, la fuente más frecuente es **asociada a procedimiento**.
 3. La combinación **podría** aumentar el sangrado verdadero, pero estos datos solo permiten plantearlo como hipótesis.
-4. Siguiente paso: repetir el análisis, ya definido, en MIMIC-IV completo.
+4. Después de la caída **no se observó beneficio ni daño claro** de añadir el antiagregante, con potencia insuficiente.
+5. Siguiente paso: repetir el análisis, ya definido, en MIMIC-IV completo (≈ 201 pacientes por grupo).
 
 ## Cautelas para decirlas en voz alta
 
@@ -74,6 +109,10 @@ Generado con `python -m antitromboticos.historia`. Cohorte: MIMIC-IV Demo v2.2, 
 - **Acoplamiento matemático en H06.** La caída se calcula como basal − nadir, así que parte de su correlación con la Hb
   basal es aritmética y regresión a la media. No demuestra por sí sola hemoconcentración.
 - **Muestra pequeña:** 11 eventos con hemorragia documentada.
+- **Sesgo de selección tras la caída.** Comparar solo a quienes ya tuvieron una caída condiciona a un evento posterior a la
+  exposición (*index event bias*): los grupos pueden diferir por razones ajenas al fármaco.
+- **Censura informativa.** El alta suele ocurrir cuando el paciente mejora, y la recuperación de Hb puede deberse a una
+  transfusión.
 
 ## Pies de figura
 
@@ -86,3 +125,9 @@ Generado con `python -m antitromboticos.historia`. Cohorte: MIMIC-IV Demo v2.2, 
 - **H07.** Análisis de referencia a 48 h: pacientes aún en seguimiento y sin evento a las 48 h (n = 53), según las Hb medidas en esas 48 h. RR 2.12 (1.20–3.75). El corte de 3 se eligió después de ver los datos; más mediciones también puede reflejar pacientes más graves.
 - **H08.** Regresión logística con 74 pacientes y 38 eventos. Razón de momios con IC 95 %. Solo variables conocidas al inicio. La asociación con Hb basal está en parte acoplada a la definición del desenlace (caída = basal − valor posterior).
 - **H09.** RR ajustado por intensidad, de la definición más amplia a la más específica. Análisis post hoc: genera hipótesis, no las confirma.
+- **H10.** Orden activa en las 24 h posteriores a la primera caída. Sin pacientes que lo suspendieran no se puede comparar continuar vs. suspender.
+- **H11.** Cambio respecto a la Hb en t0: mediana (línea) y rango intercuartílico (banda), días con al menos 5 pacientes por grupo. Modelo ajustado por Hb en t0 e intensidad, con errores HC3.
+- **H12.** Kaplan-Meier del tiempo hasta Hb ≥ basal − 1 g/dL, con censura al alta o a los 7 días. El alta temprana puede ser censura informativa.
+- **H13.** Diferencia de riesgos (combinación − solo anticoagulante) con IC 95 % de Newcombe. p de Fisher exacta y corregida por Holm sobre 7 desenlaces.
+- **H14.** Puntos: pacientes; caja: mediana y rango intercuartílico. Diferencia de Hodges-Lehmann con IC 95 % de Moses y Mann-Whitney bilateral; p Holm sobre 7 desenlaces.
+- **H15.** Hemorragia documentada, riesgo de referencia 10 %, α = 0.05 bilateral (h de Cohen). Para un RR hipotético de 2, la potencia es 22 % y se requieren 201 pacientes por grupo. No se usa potencia post hoc con el efecto observado.

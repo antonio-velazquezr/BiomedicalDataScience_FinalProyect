@@ -26,7 +26,7 @@ caracterización / epidemiológico**.
 | 2 | `README.md` que permita a un tercero reproducir el trabajo | Este archivo: [Datos](#datos), [Entorno](#entorno) y [Cómo correrlo](#cómo-correrlo) | ✅ |
 | 3 | Entorno containerizado (`Dockerfile` o `compose.yml`) | [`Dockerfile`](Dockerfile) y [`compose.yml`](compose.yml); la imagen se construye y se prueba en CI | ✅ |
 | 4 | Al menos una definición de cohorte en SQL sobre OMOP, documentada | [`sql/omop/`](sql/omop) sobre OMOP CDM 5.3.1; documentada en [`docs/omop.md`](docs/omop.md) y [`docs/cohorte.md`](docs/cohorte.md); validada contra la versión nativa ([`resultados/omop/validacion.md`](resultados/omop/validacion.md)) | ✅ |
-| 5 | Pruebas automáticas con pytest y CI en GitHub Actions | [`tests/`](tests) (40 pruebas con datos sintéticos) y [`.github/workflows/ci.yml`](.github/workflows/ci.yml) (Python 3.12 y 3.13 + Docker) | ✅ |
+| 5 | Pruebas automáticas con pytest y CI en GitHub Actions | [`tests/`](tests) (45 pruebas con datos sintéticos) y [`.github/workflows/ci.yml`](.github/workflows/ci.yml) (Python 3.12 y 3.13 + Docker) | ✅ |
 | 6 | Diccionario de datos / documentación de variables | [`docs/diccionario_datos.md`](docs/diccionario_datos.md): tipo, unidades, origen y % de faltantes de cada variable; una prueba falla si alguna queda sin documentar | ✅ |
 | 7 | Sección de limitaciones escrita honestamente | [Limitaciones](#limitaciones) | ✅ |
 | 8 | Declaración de uso de asistentes de IA | [Uso de asistentes de IA](#uso-de-asistentes-de-ia) | ✅ |
@@ -78,6 +78,8 @@ anticoagulación (profiláctica vs. terapéutica). Detalle en [`docs/propuesta.m
    tempranas; cirugía y líquidos IV no son más frecuentes en quienes tienen evento.
 4. **Con una definición más específica aparece una posible señal de la combinación:** RR 2.15 (IC 95 % 0.72–6.37).
    No es concluyente; es una hipótesis para probar en MIMIC-IV completo.
+5. **Después de la caída de Hb no se observa beneficio ni daño claro de añadir el antiagregante** (7 desenlaces, todos con
+   p de Holm = 1.0), pero el estudio no tiene potencia para descartarlo y no mide eventos trombóticos.
 
 **Análisis principal, definido en la propuesta:**
 
@@ -223,7 +225,7 @@ Cada paso reconstruye la cohorte desde los CSV, así que se pueden correr en cua
 | `python -m antitromboticos.validacion_omop` | Comparación paciente por paciente nativa vs. OMOP |
 | `python -m antitromboticos.figuras` | Figuras principales en PDF: [`figuras/principales/`](figuras/principales) |
 | `python -m antitromboticos.preguntas` | 19 análisis en PDF, uno por pregunta: [`figuras/analisis/`](figuras/analisis) |
-| `python -m antitromboticos.historia` | Análisis de las causas del sangrado: 9 figuras en PDF y [`figuras/historia/HISTORIA.md`](figuras/historia/HISTORIA.md) |
+| `python -m antitromboticos.historia` | Causas del sangrado y desenlaces tras la caída de Hb, con pruebas formales: 15 figuras en PDF y [`figuras/historia/HISTORIA.md`](figuras/historia/HISTORIA.md) |
 | `python -m antitromboticos.diccionario` | [`docs/diccionario_datos.md`](docs/diccionario_datos.md) con faltantes actualizados |
 | `python -m pytest` | Pruebas (datos sintéticos, no requieren MIMIC) |
 

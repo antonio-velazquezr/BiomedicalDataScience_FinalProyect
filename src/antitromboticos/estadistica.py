@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import math
 from dataclasses import dataclass
-from statistics import mean, stdev
+from statistics import NormalDist, mean, stdev
 
 Z95 = 1.959963984540054
 
@@ -112,3 +112,60 @@ def regresion_logistica(X, y, max_iter: int = 50, tol: float = 1e-8):
     p = 1 / (1 + np.exp(-X @ beta))
     covarianza = np.linalg.inv(X.T @ (X * np.clip(p * (1 - p), 1e-10, None)[:, None]))
     return beta, np.sqrt(np.diag(covarianza))
+
+
+def newcombe_rd(a: int, n1: int, c: int, n0: int) -> Estimacion:
+    """Diferencia de riesgos con IC 95 % híbrido de Newcombe (adecuado con n pequeños y ceros)."""
+    w1, w0 = wilson(a, n1), wilson(c, n0)
+    d = w1.valor - w0.valor
+    li = d - math.sqrt((w1.valor - w1.li) ** 2 + (w0.ls - w0.valor) ** 2)
+    ls = d + math.sqrt((w1.ls - w1.valor) ** 2 + (w0.valor - w0.li) ** 2)
+    return Estimacion(d, li, ls)
+
+
+def holm(p_valores: list[float]) -> list[float]:
+    """Valores p ajustados por Holm-Bonferroni, en el orden original."""
+    m = len(p_valores)
+    orden = sorted(range(m), key=lambda i: p_valores[i])
+    ajustados, maximo = [0.0] * m, 0.0
+    for rango, i in enumerate(orden):
+        maximo = max(maximo, min(1.0, (m - rango) * p_valores[i]))
+        ajustados[i] = maximo
+    return ajustados
+
+
+def hodges_lehmann(x1: list[float], x0: list[float]) -> Estimacion:
+    """Diferencia de ubicación (x1 − x0) de Hodges-Lehmann con IC 95 % de Moses."""
+    dif = sorted(a - b for a in x1 for b in x0)
+    m, n1, n0 = len(dif), len(x1), len(x0)
+    centro = (dif[(m - 1) // 2] + dif[m // 2]) / 2
+    k = max(0, math.floor(m / 2 - Z95 * math.sqrt(n1 * n0 * (n1 + n0 + 1) / 12)))
+    return Estimacion(centro, dif[k], dif[m - k - 1])
+
+
+def potencia_dos_proporciones(p1: float, p0: float, n1: int, n0: int, alfa: float = 0.05) -> float:
+    """Potencia bilateral aproximada para comparar dos proporciones (h de Cohen)."""
+    normal = NormalDist()
+    h = abs(2 * math.asin(math.sqrt(p1)) - 2 * math.asin(math.sqrt(p0)))
+    return normal.cdf(h * math.sqrt(n1 * n0 / (n1 + n0)) - normal.inv_cdf(1 - alfa / 2))
+
+
+def n_por_grupo(p1: float, p0: float, potencia: float = 0.8, alfa: float = 0.05) -> int:
+    """Pacientes por grupo (asignación 1:1) para detectar p1 vs. p0 (h de Cohen)."""
+    normal = NormalDist()
+    h = abs(2 * math.asin(math.sqrt(p1)) - 2 * math.asin(math.sqrt(p0)))
+    return math.ceil(2 * ((normal.inv_cdf(1 - alfa / 2) + normal.inv_cdf(potencia)) / h) ** 2)
+
+
+def ols_hc3(X, y):
+    """Mínimos cuadrados con errores robustos HC3. `X` incluye el intercepto. Devuelve (coef, ee, gl)."""
+    import numpy as np
+
+    X, y = np.asarray(X, dtype=float), np.asarray(y, dtype=float)
+    xtx_inv = np.linalg.inv(X.T @ X)
+    beta = xtx_inv @ X.T @ y
+    residuos = y - X @ beta
+    palanca = np.clip(np.einsum("ij,jk,ik->i", X, xtx_inv, X), 0, 0.999)
+    pesos = (residuos / (1 - palanca)) ** 2
+    covarianza = xtx_inv @ (X.T @ (X * pesos[:, None])) @ xtx_inv
+    return beta, np.sqrt(np.diag(covarianza)), X.shape[0] - X.shape[1]

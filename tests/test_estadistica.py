@@ -6,7 +6,13 @@ import pytest
 
 from antitromboticos.estadistica import (
     diferencia_riesgos,
+    hodges_lehmann,
+    holm,
     mantel_haenszel_rr,
+    n_por_grupo,
+    newcombe_rd,
+    ols_hc3,
+    potencia_dos_proporciones,
     razon_riesgos,
     regresion_logistica,
     smd_binaria,
@@ -79,6 +85,37 @@ def test_regresion_logistica_reproduce_tabla_2x2():
     beta, ee = regresion_logistica([[1, v] for v in x], y)
     assert math.exp(beta[1]) == pytest.approx(2.5, rel=1e-6)
     assert ee[1] == pytest.approx(math.sqrt(0.39), rel=1e-6)
+
+
+def test_newcombe_ejemplo_publicado():
+    # Newcombe (1998), método 10: 56/70 vs. 48/80
+    e = newcombe_rd(56, 70, 48, 80)
+    assert e.valor == pytest.approx(0.2)
+    assert e.li == pytest.approx(0.0524, abs=1e-4)
+    assert e.ls == pytest.approx(0.3339, abs=1e-4)
+
+
+def test_holm():
+    assert holm([0.01, 0.04, 0.03]) == pytest.approx([0.03, 0.06, 0.06])
+    assert holm([0.9, 0.8]) == pytest.approx([1.0, 1.0])  # 2 × 0.8 se trunca en 1
+
+
+def test_hodges_lehmann_desplazamiento_conocido():
+    e = hodges_lehmann([3, 4, 5, 6, 7, 8], [1, 2, 3, 4, 5, 6])
+    assert e.valor == pytest.approx(2.0)
+    assert e.li < 2 < e.ls
+
+
+def test_potencia_y_tamano_de_muestra_son_coherentes():
+    n = n_por_grupo(0.2, 0.1)
+    assert potencia_dos_proporciones(0.2, 0.1, n, n) == pytest.approx(0.8, abs=0.01)
+
+
+def test_ols_recupera_recta_exacta():
+    x = [0.0, 1.0, 2.0, 3.0, 4.0]
+    beta, ee, gl = ols_hc3([[1, v] for v in x], [2 + 3 * v for v in x])
+    assert beta == pytest.approx([2, 3])
+    assert gl == 3 and max(ee) == pytest.approx(0, abs=1e-9)
 
 
 def test_diferencias_estandarizadas():
