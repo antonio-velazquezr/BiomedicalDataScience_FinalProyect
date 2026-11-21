@@ -8,10 +8,10 @@ Construye la cohorte (ver `cohorte.py`) y escribe en `resultados/` solo tablas a
 * ``desenlaces_continuos.csv``  mediana [RIC] por grupo
 * ``resultados.md``             las tres tablas en un reporte legible
 
-y la figura ``figuras/07_forest_rr.png``.
+y la figura ``figuras/07_forest_rr.pdf``.
 
 Con ``--fuente omop`` usa la cohorte OMOP y escribe en ``resultados/omop/`` y
-``figuras/08_forest_rr_omop.png``.
+``figuras/08_forest_rr_omop.pdf``.
 
 Uso::
 
@@ -235,7 +235,7 @@ def forest_plot(bin_: pl.DataFrame, destino: Path) -> None:
     ax.legend(loc="lower left", bbox_to_anchor=(0, 1.0), ncol=2, frameon=False, fontsize=9, borderaxespad=0.2)
     ax.text(1, -0.12, "← menor riesgo con la combinación   ·   mayor riesgo →", transform=ax.get_xaxis_transform(),
             ha="center", va="top", fontsize=8, color=TINTA_2)
-    fig.savefig(destino, dpi=150, bbox_inches="tight", facecolor="#fcfcfb")
+    fig.savefig(destino, bbox_inches="tight")
     plt.close(fig)
 
 
@@ -248,7 +248,7 @@ def main() -> None:
     con = construir(args.fuente)
     df = pl.read_parquet(exportar(con, args.fuente))
     salida = FUENTES[args.fuente].resultados
-    figura = "07_forest_rr.png" if args.fuente == "mimic" else f"08_forest_rr_{args.fuente}.png"
+    figura = "07_forest_rr.pdf" if args.fuente == "mimic" else f"08_forest_rr_{args.fuente}.pdf"
 
     t1 = tabla1(df)
     bin_ = desenlaces_binarios(df)
@@ -287,7 +287,7 @@ def main() -> None:
         "## Tabla 1. Características basales", a_markdown(t1),
         "## Tabla 2. Desenlaces binarios", a_markdown(tabla_bin),
         "## Tabla 3. Desenlaces continuos, mediana [RIC]", a_markdown(cont),
-        "## Figura", f"![Forest plot]({'../' * (len(salida.relative_to(RAIZ).parts))}figuras/{figura})",
+        "## Figura", f"[Forest plot (PDF)]({'../' * (len(salida.relative_to(RAIZ).parts))}figuras/{figura})",
     ])
     (salida / "resultados.md").write_text(reporte + "\n", encoding="utf-8")
 

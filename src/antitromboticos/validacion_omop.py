@@ -91,7 +91,7 @@ def main() -> None:
     estratos = con.sql("""
         SELECT estrato_n, estrato_o, count(*) n FROM comparacion
         WHERE en_nativa AND en_omop AND misma_hosp AND estrato_n IS DISTINCT FROM estrato_o
-        GROUP BY ALL ORDER BY n DESC""").fetchall()
+        GROUP BY ALL ORDER BY n DESC, estrato_n, estrato_o""").fetchall()
     discordancias = "\n".join(f"| {a} | {b} | {n} |" for a, b, n in estratos) or "| — | — | 0 |"
 
     reporte = f"""# Validación: cohorte OMOP vs. cohorte nativa

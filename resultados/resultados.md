@@ -71,4 +71,4 @@ Generado por `python -m antitromboticos.analisis --fuente mimic`. Combinación =
 
 ## Figura
 
-![Forest plot](../figuras/07_forest_rr.png)
+[Forest plot (PDF)](../figuras/07_forest_rr.pdf)

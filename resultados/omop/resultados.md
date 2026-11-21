@@ -67,4 +67,4 @@ Generado por `python -m antitromboticos.analisis --fuente omop`. Combinación = 
 
 ## Figura
 
-![Forest plot](../../figuras/08_forest_rr_omop.png)
+[Forest plot (PDF)](../../figuras/08_forest_rr_omop.pdf)
