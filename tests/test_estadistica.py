@@ -8,6 +8,7 @@ from antitromboticos.estadistica import (
     diferencia_riesgos,
     mantel_haenszel_rr,
     razon_riesgos,
+    regresion_logistica,
     smd_binaria,
     smd_continua,
     wilson,
@@ -69,6 +70,15 @@ def test_mantel_haenszel_con_estratos_homogeneos():
 
 def test_mantel_haenszel_omite_estratos_vacios():
     assert mantel_haenszel_rr([(10, 100, 5, 100), (0, 0, 3, 10)]).valor == pytest.approx(2.0)
+
+
+def test_regresion_logistica_reproduce_tabla_2x2():
+    # a=10, b=20, c=5, d=25 -> OR = 2.5; EE(log OR) = sqrt(1/10 + 1/20 + 1/5 + 1/25)
+    x = [1] * 30 + [0] * 30
+    y = [1] * 10 + [0] * 20 + [1] * 5 + [0] * 25
+    beta, ee = regresion_logistica([[1, v] for v in x], y)
+    assert math.exp(beta[1]) == pytest.approx(2.5, rel=1e-6)
+    assert ee[1] == pytest.approx(math.sqrt(0.39), rel=1e-6)
 
 
 def test_diferencias_estandarizadas():

@@ -93,3 +93,22 @@ def smd_binaria(p1: float, p0: float) -> float:
     """Diferencia de medias estandarizada para una proporción."""
     de = math.sqrt((p1 * (1 - p1) + p0 * (1 - p0)) / 2)
     return (p1 - p0) / de if de > 0 else 0.0
+
+
+def regresion_logistica(X, y, max_iter: int = 50, tol: float = 1e-8):
+    """Regresión logística por IRLS. `X` debe incluir el intercepto. Devuelve (coeficientes, errores estándar)."""
+    import numpy as np
+
+    X, y = np.asarray(X, dtype=float), np.asarray(y, dtype=float)
+    beta = np.zeros(X.shape[1])
+    for _ in range(max_iter):
+        p = 1 / (1 + np.exp(-X @ beta))
+        pesos = np.clip(p * (1 - p), 1e-10, None)
+        hessiano = X.T @ (X * pesos[:, None])
+        paso = np.linalg.solve(hessiano, X.T @ (y - p))
+        beta += paso
+        if np.max(np.abs(paso)) < tol:
+            break
+    p = 1 / (1 + np.exp(-X @ beta))
+    covarianza = np.linalg.inv(X.T @ (X * np.clip(p * (1 - p), 1e-10, None)[:, None]))
+    return beta, np.sqrt(np.diag(covarianza))
