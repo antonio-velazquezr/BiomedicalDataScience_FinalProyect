@@ -751,6 +751,41 @@ def p19_concordancia_omop() -> Resultado:
                      "(unidades ≠ servicio).")
 
 
+def p20_emar() -> Resultado:
+    from antitromboticos.cohorte import SALIDA_RESULTADOS
+    from antitromboticos.sensibilidad_emar import cohortes, concordancia_grupo
+
+    c = cohortes()
+    nombres = {"principal": "Principal: prescripción, todos",
+               "cobertura_emar": "Prescripción, solo con emar",
+               "administrada": "Dosis administradas (emar)"}
+    desenlaces = {"sangrado_relevante": "Sangrado relevante", "sangrado_documentado": "Hemorragia documentada"}
+    filas, registros = [], []
+    for col, etq in desenlaces.items():
+        for v, nombre in nombres.items():
+            a, n1, b, n0 = conteos(c[v], col)
+            e = rr_ajustado(c[v], col=col)
+            filas.append((f"{etq} · {nombre}", e, f"{a}/{n1} vs. {b}/{n0}"))
+            registros.append(dict(desenlace=col, cohorte=v, eventos_combinacion=a, n_combinacion=n1, eventos_solo_ac=b,
+                                  n_solo_ac=n0, rr_mh=round(e.valor, 3), ic95_inf=round(e.li, 3), ic95_sup=round(e.ls, 3)))
+    pl.DataFrame(registros).write_csv(SALIDA_RESULTADOS / "sensibilidad_emar.csv")
+    iguales, total = concordancia_grupo(c["cobertura_emar"], c["administrada"])
+    estable = all(cruza_uno(f[1]) for f in filas)
+    fig, ax = lienzo("Usar las dosis realmente administradas no cambia la conclusión" if estable
+                     else "Usar las dosis administradas cambia la conclusión",
+                     "RR ajustado por intensidad. emar cubre solo parte de las hospitalizaciones: comparar la segunda y la "
+                     f"tercera fila de cada desenlace aísla el efecto de cambiar la exposición. Mismo grupo en {iguales} de "
+                     f"{total} pacientes con la misma hospitalización índice",
+                     figsize=(11, 4.8))
+    forest(ax, filas, lim=(0.25, 10), resaltar={0, 3})
+    ax.axhline(2.5, color=REJILLA, lw=1)
+    guardar(fig, "P20_sensibilidad_emar.pdf", SALIDA)
+    adm = filas[5][1]
+    return Resultado("P20_sensibilidad_emar.pdf", "¿Cambia el resultado con las dosis realmente administradas?",
+                     f"{'No' if estable else 'Sí'}: hemorragia documentada RR {fmt(adm)} con emar; "
+                     f"el grupo coincide en {iguales}/{total} pacientes.")
+
+
 # ----------------------------------------------------------------------------- main
 def main() -> None:
     con = construir("mimic")
@@ -762,7 +797,7 @@ def main() -> None:
         lambda: p10_plaquetas(df), lambda: p11_estancia(df), lambda: p12_umbral(con, df),
         lambda: p13_ventana(df), lambda: p14_definicion_exposicion(df), lambda: p15_restricciones(df),
         lambda: p16_subgrupos(df), lambda: p17_factores(df), lambda: p18_confusion(df),
-        p19_concordancia_omop,
+        p19_concordancia_omop, p20_emar,
     ]
     resultados = []
     for paso in pasos:

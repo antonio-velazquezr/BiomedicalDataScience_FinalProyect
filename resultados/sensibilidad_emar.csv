@@ -1,0 +1,7 @@
+desenlace,cohorte,eventos_combinacion,n_combinacion,eventos_solo_ac,n_solo_ac,rr_mh,ic95_inf,ic95_sup
+sangrado_relevante,principal,16,33,22,41,0.908,0.587,1.404
+sangrado_relevante,cobertura_emar,10,24,14,26,0.759,0.43,1.339
+sangrado_relevante,administrada,8,24,9,26,0.949,0.445,2.023
+sangrado_documentado,principal,7,33,4,41,2.147,0.723,6.375
+sangrado_documentado,cobertura_emar,5,24,3,26,1.87,0.542,6.448
+sangrado_documentado,administrada,5,24,2,26,2.657,0.578,12.211

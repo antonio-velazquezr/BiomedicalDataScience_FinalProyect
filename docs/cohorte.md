@@ -99,8 +99,11 @@ Si un paciente no tiene laboratorios en el seguimiento, el evento de laboratorio
 
 ## Limitaciones conocidas
 
-- La clasificación de fármacos es por nombre. En OMOP se hará con RxNorm/ATC.
-- La exposición se define por prescripción; la administración real (`emar`) queda como análisis de sensibilidad.
+- En la versión nativa, la clasificación de fármacos es por nombre, vía y dosis. En OMOP se usan conceptos RxNorm
+  identificados por NDC (ver [docs/omop.md](omop.md)).
+- La exposición principal se define por prescripción. La sensibilidad con dosis administradas (`emar`) está en
+  [`resultados/sensibilidad_emar.csv`](../resultados/sensibilidad_emar.csv) y `figuras/analisis/P20_sensibilidad_emar.pdf`;
+  `emar` no cubre todas las hospitalizaciones (50 de los pacientes elegibles en esa variante).
 - No se ven los antiagregantes tomados antes del ingreso. Un paciente del grupo "solo anticoagulante"
   podría tener efecto residual de aspirina tomada en casa.
 - La transfusión solo se registra en UCI.

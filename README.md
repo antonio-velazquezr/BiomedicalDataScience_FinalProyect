@@ -6,8 +6,10 @@ Proyecto final del curso de ciencia de datos en salud. Es un estudio de farmacov
 **efecto conjunto de anticoagulantes y antiagregantes** en pacientes hospitalizados, con datos de
 MIMIC-IV Demo en tablas nativas y en OMOP CDM.
 
-> **Estado:** cohorte, desenlaces, análisis descriptivo, análisis de sensibilidad y figuras implementados
-> y probados. Pendiente: vocabularios estándar de Athena (opcional) y entrega final (sesión 30).
+**Autor:** José Antonio Velázquez Ruiz · Noviembre 2026
+
+> **Estado:** versión de entrega. Cohorte, desenlaces, análisis descriptivo, análisis de sensibilidad y
+> figuras implementados y probados. Mejora opcional a futuro: vocabularios estándar de Athena.
 
 ---
 
@@ -26,7 +28,7 @@ caracterización / epidemiológico**.
 | 2 | `README.md` que permita a un tercero reproducir el trabajo | Este archivo: [Datos](#datos), [Entorno](#entorno) y [Cómo correrlo](#cómo-correrlo) | ✅ |
 | 3 | Entorno containerizado (`Dockerfile` o `compose.yml`) | [`Dockerfile`](Dockerfile) y [`compose.yml`](compose.yml); la imagen se construye y se prueba en CI | ✅ |
 | 4 | Al menos una definición de cohorte en SQL sobre OMOP, documentada | [`sql/omop/`](sql/omop) sobre OMOP CDM 5.3.1; documentada en [`docs/omop.md`](docs/omop.md) y [`docs/cohorte.md`](docs/cohorte.md); validada contra la versión nativa ([`resultados/omop/validacion.md`](resultados/omop/validacion.md)) | ✅ |
-| 5 | Pruebas automáticas con pytest y CI en GitHub Actions | [`tests/`](tests) (45 pruebas con datos sintéticos) y [`.github/workflows/ci.yml`](.github/workflows/ci.yml) (Python 3.12 y 3.13 + Docker) | ✅ |
+| 5 | Pruebas automáticas con pytest y CI en GitHub Actions | [`tests/`](tests) (48 pruebas con datos sintéticos) y [`.github/workflows/ci.yml`](.github/workflows/ci.yml) (Python 3.12 y 3.13 + Docker) | ✅ |
 | 6 | Diccionario de datos / documentación de variables | [`docs/diccionario_datos.md`](docs/diccionario_datos.md): tipo, unidades, origen y % de faltantes de cada variable; una prueba falla si alguna queda sin documentar | ✅ |
 | 7 | Sección de limitaciones escrita honestamente | [Limitaciones](#limitaciones) | ✅ |
 | 8 | Declaración de uso de asistentes de IA | [Uso de asistentes de IA](#uso-de-asistentes-de-ia) | ✅ |
@@ -39,7 +41,7 @@ caracterización / epidemiológico**.
 | Definir una cohorte, caracterizarla y responder una pregunta descriptiva o de asociación | [Pregunta](#pregunta); cohorte en [`sql/`](sql) y [`sql/omop/`](sql/omop); Tabla 1 y desenlaces en [`resultados/resultados.md`](resultados/resultados.md) | ✅ |
 | Énfasis en SQL, OMOP, vocabularios y cohortes (bloques II y III) | SQL en DuckDB, cohorte sobre OMOP CDM, conceptos RxNorm/LOINC ([`sql/omop/01_conjuntos_conceptos.sql`](sql/omop/01_conjuntos_conceptos.sql)) | ✅ |
 | **Extra:** tabla de atrición | [`resultados/atricion.csv`](resultados/atricion.csv) (nativa) y [`resultados/omop/atricion.csv`](resultados/omop/atricion.csv); diagrama en [`figuras/principales/01_atricion.pdf`](figuras/principales/01_atricion.pdf) | ✅ |
-| **Extra:** análisis de sensibilidad de la definición | [`figuras/analisis/`](figuras/analisis): umbral de sangrado (P12), ventana de seguimiento (P13), definición de la exposición (P14), restricciones de población (P15), confusión (P18) y réplica en OMOP (P19) | ✅ |
+| **Extra:** análisis de sensibilidad de la definición | [`figuras/analisis/`](figuras/analisis): umbral de sangrado (P12), ventana de seguimiento (P13), definición de la exposición (P14), restricciones de población (P15), confusión (P18), réplica en OMOP (P19) y dosis realmente administradas (P20) | ✅ |
 
 ### Reglas del curso sobre datos
 
@@ -55,9 +57,9 @@ caracterización / epidemiológico**.
 |---|---|---|---|
 | 10 | Propuesta de 1 página: pregunta, modalidad, datos, entregable esperado | [`docs/propuesta.md`](docs/propuesta.md) | ✅ |
 | 18 | Cohorte definida, implementada y con tabla de atrición | [`docs/cohorte.md`](docs/cohorte.md), [`sql/`](sql), [`resultados/atricion.csv`](resultados/atricion.csv) | ✅ |
-| 24 | Avance intermedio (15 min de revisión con el profesor) | Todo lo anterior + [`figuras/`](figuras) | Pendiente de la sesión |
-| 30 | Entrega del repositorio final | Este repositorio | En curso |
-| 31 | Presentación de 12 min + 5 de preguntas | — | Pendiente |
+| 24 | Avance intermedio (15 min de revisión con el profesor) | Todo lo anterior + [`figuras/`](figuras) | Repositorio compartido con el profesor |
+| 30 | Entrega del repositorio final | Este repositorio | ✅ Versión de entrega |
+| 31 | Presentación de 12 min + 5 de preguntas | Última semana de noviembre | Programada |
 
 ---
 
@@ -99,7 +101,7 @@ Tablas completas en [`resultados/resultados.md`](resultados/resultados.md). Figu
 
 - [`figuras/principales/`](figuras/principales/INDICE.md): las 6 figuras de resultados (atrición,
   balance basal, desenlace principal, forest plot, trayectorias, réplica OMOP).
-- [`figuras/analisis/`](figuras/analisis/INDICE.md): 19 análisis; cada uno contesta una pregunta, con
+- [`figuras/analisis/`](figuras/analisis/INDICE.md): 20 análisis; cada uno contesta una pregunta, con
   su respuesta corta en el índice.
 
 ## Diseño
@@ -148,9 +150,10 @@ Tipo, unidades y origen de cada variable: [diccionario de datos](docs/diccionari
   corrigió formalmente.
 - **Medición del sangrado.** La caída de Hb también la producen la hemodilución y las flebotomías. La
   transfusión solo está registrada en UCI (`inputevents`). Un evento no medido cuenta como ausente.
-- **Exposición por prescripción.** Se usan las órdenes (`prescriptions`), no la administración real
-  (`emar`). Las órdenes sin fecha de término se asumen activas hasta el alta, y no se ven los
-  antiagregantes tomados antes del ingreso.
+- **Exposición por prescripción.** El análisis principal usa las órdenes (`prescriptions`). Con dosis
+  realmente administradas (`emar`, disponible para 50 pacientes elegibles) la conclusión no cambia
+  ([P20](figuras/analisis/P20_sensibilidad_emar.pdf)). Las órdenes sin fecha de término se asumen activas
+  hasta el alta, y no se ven los antiagregantes tomados antes del ingreso.
 - **Clasificación de fármacos.** En la versión nativa es por nombre, vía y dosis. En OMOP se usan
   listas de `concept_id` identificadas por cruce de NDC, porque el release no incluye los vocabularios
   estándar (sin `concept_ancestor`).
@@ -224,7 +227,7 @@ Cada paso reconstruye la cohorte desde los CSV, así que se pueden correr en cua
 | `python -m antitromboticos.analisis --fuente omop` | Lo mismo sobre OMOP: [`resultados/omop/`](resultados/omop) |
 | `python -m antitromboticos.validacion_omop` | Comparación paciente por paciente nativa vs. OMOP |
 | `python -m antitromboticos.figuras` | Figuras principales en PDF: [`figuras/principales/`](figuras/principales) |
-| `python -m antitromboticos.preguntas` | 19 análisis en PDF, uno por pregunta: [`figuras/analisis/`](figuras/analisis) |
+| `python -m antitromboticos.preguntas` | 20 análisis en PDF, uno por pregunta: [`figuras/analisis/`](figuras/analisis) |
 | `python -m antitromboticos.historia` | Causas del sangrado y desenlaces tras la caída de Hb, con pruebas formales: 15 figuras en PDF y [`figuras/historia/HISTORIA.md`](figuras/historia/HISTORIA.md) |
 | `python -m antitromboticos.diccionario` | [`docs/diccionario_datos.md`](docs/diccionario_datos.md) con faltantes actualizados |
 | `python -m pytest` | Pruebas (datos sintéticos, no requieren MIMIC) |
@@ -236,12 +239,14 @@ Cada paso reconstruye la cohorte desde los CSV, así que se pueden correr en cua
 Dockerfile, compose.yml, constraints.txt, pyproject.toml
 sql/                  conjuntos de fármacos, cohorte y desenlaces sobre tablas nativas de MIMIC
 sql/omop/             conjuntos de conceptos, cohorte y desenlaces sobre OMOP CDM
+sql/historia/         causas del sangrado y desenlaces tras la caída de Hb
+sql/sensibilidad/     exposición por dosis administradas (emar)
 src/antitromboticos/  pipeline (cohorte, análisis, figuras, validación, diccionario)
 tests/                pruebas con datos sintéticos
 docs/                 propuesta, definición de cohorte, diccionario de datos, notas de OMOP
 resultados/           tablas agregadas (sin datos individuales); resultados/omop/ para OMOP
 figuras/principales/  6 figuras de resultados (PDF) + INDICE.md
-figuras/analisis/     19 análisis, uno por pregunta (PDF) + INDICE.md
+figuras/analisis/     20 análisis, uno por pregunta (PDF) + INDICE.md
 figuras/historia/     hilo narrativo sobre las causas del sangrado (PDF) + HISTORIA.md
 figuras/              raíz: forest plots del análisis (PDF) y figuras de la exploración inicial (PNG)
 notebooks/            exploración inicial (no es lógica de producción)

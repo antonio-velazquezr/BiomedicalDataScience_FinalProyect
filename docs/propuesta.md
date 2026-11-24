@@ -25,7 +25,8 @@ pacientes hospitalizados reales.
 
 - **Fuente:** MIMIC-IV Clinical Database Demo v2.2 (PhysioNet), 100 pacientes, licencia ODbL.
   Descargado el 2026-11-09. Los datos no se incluyen en el repositorio.
-- **Implementación:** SQL en DuckDB (`sql/`), ejecutado desde Python. Conversión a OMOP CDM pendiente.
+- **Implementación:** SQL en DuckDB, ejecutado desde Python, sobre tablas nativas (`sql/`) y sobre OMOP CDM
+  5.3.1 (`sql/omop/`, ver `docs/omop.md`).
 - **Volumen:** la cohorte implementada tiene 74 pacientes: 33 con la combinación y 41 con solo
   anticoagulante (ver `docs/cohorte.md`).
 
@@ -52,7 +53,11 @@ Mantel-Haenszel entre estratos, Tabla 1 con indicaciones (fibrilación auricular
 tromboembolia venosa, insuficiencia cardiaca) y tabla de atrición.
 
 **Sensibilidad:** exposición por administración (`emar`); seguimiento de 7 días; excluir cirugía
-cardiaca; desenlace solo por laboratorio.
+cardiaca; desenlace solo por laboratorio. Todos están implementados (`figuras/analisis/`, P12–P15 y P20).
+
+**Análisis exploratorios añadidos después de ver los datos** (`figuras/historia/HISTORIA.md`): explicación
+probable de cada caída de Hb, sitio de la hemorragia documentada y desenlaces después de la caída. Generan
+hipótesis y no sustituyen la pregunta principal.
 
 ## Limitaciones previstas
 
